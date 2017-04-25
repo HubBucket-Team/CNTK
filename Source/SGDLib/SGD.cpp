@@ -861,43 +861,56 @@ void SGD<ElemType>::TrainOrAdaptModel(int startEpoch, ComputationNetworkPtr net,
         // Persist model and check-point info
         if ((m_mpi == nullptr) || m_mpi->IsMainNode())
         {
+            SaveCheckPointInfo(
+                i,
+                totalTrainingSamplesSeen,
+                learnRatePerSample,
+                smoothedGradients,
+                smoothedCounts,
+                prevCriterion,
+                chosenMinibatchSize);
+            auto modelName = GetModelNameForEpoch(i);
+            if (m_traceLevel > 0)
+                LOGPRINTF(stderr, "SGD: Saving checkpoint model '%ls'\n", modelName.c_str());
+            net->Save(modelName);
+
             if (loadedPrevModel)
             {
-                // If previous best model is loaded, we will first remove epochs that lead to worse results
-                for (int j = 1; j < m_learnRateAdjustInterval; j++)
-                {
-                    int epochToDelete = i - j;
-                    LOGPRINTF(stderr, "SGD: removing model and checkpoint files for epoch %d after rollback to epoch %lu\n", epochToDelete + 1, (unsigned long)(i - m_learnRateAdjustInterval) + 1);  // report 1 based epoch number
-                    _wunlink(GetModelNameForEpoch(epochToDelete).c_str());
-                    _wunlink(GetCheckPointFileNameForEpoch(epochToDelete).c_str());
-                }
+                ////// If previous best model is loaded, we will first remove epochs that lead to worse results
+                ////for (int j = 1; j < m_learnRateAdjustInterval; j++)
+                ////{
+                ////    int epochToDelete = i - j;
+                ////    LOGPRINTF(stderr, "SGD: removing model and checkpoint files for epoch %d after rollback to epoch %lu\n", epochToDelete + 1, (unsigned long)(i - m_learnRateAdjustInterval) + 1);  // report 1 based epoch number
+                ////    _wunlink(GetModelNameForEpoch(epochToDelete).c_str());
+                ////    _wunlink(GetCheckPointFileNameForEpoch(epochToDelete).c_str());
+                ////}
 
-                // Set i back to the loaded model
-                i -= m_learnRateAdjustInterval;
+                ////// Set i back to the loaded model
+                ////i -= m_learnRateAdjustInterval;
                 LOGPRINTF(stderr, "SGD: revoke back to and update checkpoint file for epoch %d\n", i+1); // report 1 based epoch number
-                SaveCheckPointInfo(
-                    i,
-                    totalTrainingSamplesSeen,
-                    learnRatePerSample,
-                    smoothedGradients,
-                    smoothedCounts,
-                    prevCriterion,
-                    chosenMinibatchSize);
+                ////SaveCheckPointInfo(
+                ////    i,
+                ////    totalTrainingSamplesSeen,
+                ////    learnRatePerSample,
+                ////    smoothedGradients,
+                ////    smoothedCounts,
+                ////    prevCriterion,
+                ////    chosenMinibatchSize);
             }
             else
             {
-                SaveCheckPointInfo(
-                    i,
-                    totalTrainingSamplesSeen,
-                    learnRatePerSample,
-                    smoothedGradients,
-                    smoothedCounts,
-                    prevCriterion,
-                    chosenMinibatchSize);
-                auto modelName = GetModelNameForEpoch(i);
-                if (m_traceLevel > 0)
-                    LOGPRINTF(stderr, "SGD: Saving checkpoint model '%ls'\n", modelName.c_str());
-                net->Save(modelName);
+                ////SaveCheckPointInfo(
+                ////    i,
+                ////    totalTrainingSamplesSeen,
+                ////    learnRatePerSample,
+                ////    smoothedGradients,
+                ////    smoothedCounts,
+                ////    prevCriterion,
+                ////    chosenMinibatchSize);
+                ////auto modelName = GetModelNameForEpoch(i);
+                ////if (m_traceLevel > 0)
+                ////    LOGPRINTF(stderr, "SGD: Saving checkpoint model '%ls'\n", modelName.c_str());
+                ////net->Save(modelName);
                 if (!m_keepCheckPointFiles)
                 {
                     // delete previous checkpoint file to save space
@@ -919,14 +932,14 @@ void SGD<ElemType>::TrainOrAdaptModel(int startEpoch, ComputationNetworkPtr net,
                 }
             }
         }
-        else
-        {
-            if (loadedPrevModel)
-            {
-                // Set i back to the loaded model
-                i -= m_learnRateAdjustInterval;
-            }
-        }
+        ////else
+        ////{
+        ////    if (loadedPrevModel)
+        ////    {
+        ////        // Set i back to the loaded model
+        ////        i -= m_learnRateAdjustInterval;
+        ////    }
+        ////}
 
         if (learnRatePerSample < 1e-12)
         {
